@@ -2,8 +2,6 @@
 //  ContentView.swift
 //  ReversiGame
 //
-//  Created by 佐藤一成 on 2021/12/18.
-//
 
 import SwiftUI
 
@@ -143,7 +141,7 @@ class ReversiGame:ObservableObject{
         countStones()
         makeMesage()
     }
-    
+    // turn stones change turn
     func progressGame(pos:Pos){
         func changePlayer(cell:Cell)->Bool{
             switch cell {
@@ -175,8 +173,6 @@ class ReversiGame:ObservableObject{
         }
         makeMesage()
     }
-    
-    
     
     // has  functions set cells array and return deployable cells for both
     private func checkAllCells()->(black:[Pos],white:[Pos]){
@@ -272,7 +268,9 @@ struct ContentView: View {
                     }
                 }
             }
-            Text(self.reversi.message).font(.largeTitle)
+            Text(self.reversi.message)
+                .font(.largeTitle)
+                .multilineTextAlignment(.center)
         }
     }
 }
