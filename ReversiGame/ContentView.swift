@@ -33,13 +33,14 @@ enum Cell:Equatable{
         case .empty(_):return Color.clear
         }
     }
-    
+    // make bool for stone or empty
     var isStoneOn:Bool{
         switch self{
         case .stone(_):return true
         case .empty(_):return false
         }
     }
+    
     enum Stone:CaseIterable{
         case black
         case white
@@ -84,12 +85,14 @@ enum Cell:Equatable{
 
 class ReversiGame:ObservableObject{
     typealias Pos = (x:Int,y:Int)
-
     
+    // when game is over then false
     var isIngame:Bool = false
-    
+    //player's stone
     var player:Cell.Stone = .black
-    
+    // for animation purpose
+    @Published var sequenceCells:[Pos] = []
+    // all cells information
     @Published var cells:[[Cell]] = []
     private func setCell(pos:Pos,cell:Cell){
         self.cells[pos.x][pos.y] = cell
@@ -98,7 +101,7 @@ class ReversiGame:ObservableObject{
         self.cells[pos.x][pos.y]
     }
     
-    
+    //number of stone it is not compulsory for the program
     @Published var stoneCounts:(black:Int,white:Int) = (0,0)
     private func countStones(){
         stoneCounts = (0,0)
@@ -110,7 +113,7 @@ class ReversiGame:ObservableObject{
             }
         }
     }
-    
+    // message string.
     @Published var message:String = ""
     private func makeMesage(){
         if isIngame{
@@ -119,7 +122,7 @@ class ReversiGame:ObservableObject{
             if stoneCounts.black == stoneCounts.white{
                 message = "DRAW\n"
             }else{
-                message = "\(stoneCounts.black>stoneCounts.white ? "Black":"White") won\n"
+                message = "\(stoneCounts.black>stoneCounts.white ? "Black":"White") Won\n"
             }
         }
         message += "Black:\(stoneCounts.black) - White:\(stoneCounts.white)"
@@ -128,7 +131,10 @@ class ReversiGame:ObservableObject{
     init(){
         startUp()
     }
+    
     func startUp(){
+        player = .black
+        sequenceCells = []
         isIngame = true
         cells.removeAll()
         let oneRow:[Cell] = [Cell](repeating: .empty(deployable: .none), count: 8)
@@ -143,7 +149,7 @@ class ReversiGame:ObservableObject{
     }
     // turn stones change turn
     func progressGame(pos:Pos){
-        func changePlayer(cell:Cell)->Bool{
+        func canChangePlayer(cell:Cell)->Bool{
             switch cell {
             case .stone(_):
                 return false
@@ -157,13 +163,29 @@ class ReversiGame:ObservableObject{
             }
         }
         
+        guard sequenceCells.count == 0 else{return}
         let cell = getCell(pos: pos)
-        guard changePlayer(cell: cell) else{return}
+        
+        guard canChangePlayer(cell: cell) else{return}
         let reverseCells:[Pos] = [pos] + checkDeployable(pos: pos, stone: player)
-        for reverseCell in reverseCells{
-            setCell(pos: reverseCell, cell: player.cell)
+        sequenceCells = reverseCells
+    }
+    // called from ContentView constantly
+    func removeFirstPos(){
+        if sequenceCells.count>0{
+            let pos = sequenceCells[0]
+            setCell(pos: pos, cell: player.cell)
+            sequenceCells.remove(at: 0)
+            
+            if sequenceCells.count == 0{
+                changePlayerOrEndGame()
+            }
+            countStones()
+            makeMesage()
         }
-        countStones()
+    }
+    // change player check whethr game is over or not
+    private func changePlayerOrEndGame(){
         let reversibleCells = checkAllCells()
         switch(black:reversibleCells.black.count>0,white:reversibleCells.white.count>0){
         case (true,true):player = player.opposedPlayer
@@ -171,10 +193,9 @@ class ReversiGame:ObservableObject{
         case (false,true):player = .white
         case (false,false):isIngame = false
         }
-        makeMesage()
     }
-    
-    // has  functions set cells array and return deployable cells for both
+
+    // functions set cells array and return deployable cells for both
     private func checkAllCells()->(black:[Pos],white:[Pos]){
         var reversibleCells:(black:[Pos],white:[Pos]) = (black:[],white:[])
         for x in 0..<8{
@@ -191,7 +212,7 @@ class ReversiGame:ObservableObject{
                 case .empty(deployable: .white):
                     reversibleCells.white.append(pos)
                 default:
-                    print(pos)
+                    _ = true
                 }
             }
         }
@@ -244,7 +265,7 @@ class ReversiGame:ObservableObject{
 
 struct ContentView: View {
     @ObservedObject var reversi = ReversiGame()
-    let length:CGFloat = UIScreen.main.bounds.width/CGFloat(8)
+    let length:CGFloat = 0.9 * UIScreen.main.bounds.width/CGFloat(8)
     var body: some View {
         VStack(spacing: 0.0) {
             ForEach(0..<8){ y in
@@ -259,18 +280,29 @@ struct ContentView: View {
                                 .fill(self.reversi.cells[x][y].stoneColor)
                                 .frame(width:length * 0.8, height: length * 0.8)
                             VStack{
-                                Text("X:\(x)  Y:\(y)")
-                                    .foregroundColor(Color.blue)
-                            }.font(.title2)
+                                Text("(\(x),\(y))")
+                                    .foregroundColor(Color.red)
+                            }.font(.subheadline)
                         }.onTapGesture {
                             self.reversi.progressGame(pos: (x:x,y:y))
                         }
                     }
                 }
             }
+        }.onReceive(Timer.publish(every: 0.1, on: .main, in: .default).autoconnect()) { t in
+            self.reversi.removeFirstPos()
+        }
+        .animation(Animation.linear(duration: 0.5))
+        VStack{
             Text(self.reversi.message)
                 .font(.largeTitle)
                 .multilineTextAlignment(.center)
+            Text("RESET")
+                .font(.largeTitle)
+                .foregroundColor(.red)
+                .onTapGesture {
+                    self.reversi.startUp()
+                }
         }
     }
 }
