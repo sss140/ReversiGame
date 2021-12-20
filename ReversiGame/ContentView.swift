@@ -5,91 +5,22 @@
 
 import SwiftUI
 
-enum Direction:CaseIterable{
-    case up,upRight,right,downRight,down,downLeft,left,upLeft
-    var axis:(x:Int,y:Int){
-        switch self {
-        case .up:return (x: 0,y:-1)
-        case .upRight:return (x: 1,y:-1)
-        case .right:return (x: 1,y: 0)
-        case .downRight:return (x: 1,y: 1)
-        case .down:return (x: 0,y: 1)
-        case .downLeft:return (x:-1,y: 1)
-        case .left:return (x:-1,y: 0)
-        case .upLeft:return (x:-1,y:-1)
-        }
-    }
-}
-
-enum Cell:Equatable{
-    
-    case stone(stone:Stone)
-    case empty(deployable:Deployable)
-    
-    var stoneColor:Color{
-        switch self{
-        case .stone(stone: .black):return Color.black
-        case .stone(stone: .white):return Color.white
-        case .empty(_):return Color.clear
-        }
-    }
-    // make bool for stone or empty
-    var isStoneOn:Bool{
-        switch self{
-        case .stone(_):return true
-        case .empty(_):return false
-        }
-    }
-    
-    enum Stone:CaseIterable{
-        case black
-        case white
-        
-        var cell:Cell{
-            switch self{
-            case .black:return .stone(stone: .black)
-            case .white:return .stone(stone: .white)
-            }
-        }
-        
-        var opposed:Cell{
-            switch self{
-            case .black:return .stone(stone: .white)
-            case .white:return .stone(stone: .black)
-            }
-        }
-        var opposedPlayer:Stone{
-            switch self{
-            case .black:return .white
-            case .white:return .black
-            }
-        }
-    }
-    enum Deployable{
-        case both
-        case black
-        case white
-        case none
-        
-        var cell:Cell{
-            switch self{
-            case .both:return .empty(deployable: .both)
-            case .black:return .empty(deployable: .black)
-            case .white:return .empty(deployable: .white)
-            case .none:return .empty(deployable: .none)
-            }
-        }
-    }
-    
-}
 
 class ReversiGame:ObservableObject{
     typealias Pos = (x:Int,y:Int)
+   //for calc
+    @Published var scores:[[Int?]] = []
+    var refPoints:[[Int]] = []
+    
     
     // when game is over then false
     var isIngame:Bool = false
     //player's stone
-    var player:Cell.Stone = .black
+    var player:Cell.Stone = .black{
+        didSet{
+            makeHeatMap()
+        }
+    }
     // for animation purpose
     @Published var sequenceCells:[Pos] = []
     // all cells information
@@ -129,12 +60,11 @@ class ReversiGame:ObservableObject{
     }
     
     init(){
+        setRefPoints()
         startUp()
     }
     
     func startUp(){
-        player = .black
-        sequenceCells = []
         isIngame = true
         cells.removeAll()
         let oneRow:[Cell] = [Cell](repeating: .empty(deployable: .none), count: 8)
@@ -143,7 +73,10 @@ class ReversiGame:ObservableObject{
         setCell(pos:(x: 4, y: 4), cell: .stone(stone: .black))
         setCell(pos:(x: 3, y: 4), cell: .stone(stone: .white))
         setCell(pos:(x: 4, y: 3), cell: .stone(stone: .white))
-        _ = checkAllCells()
+        player = .black
+        _ = checkAllCellsAndGetDeployablePositions(cells: self.cells){pos,cell  in
+            self.cells[pos.x][pos.y] = cell
+        }
         countStones()
         makeMesage()
     }
@@ -167,7 +100,7 @@ class ReversiGame:ObservableObject{
         let cell = getCell(pos: pos)
         
         guard canChangePlayer(cell: cell) else{return}
-        let reverseCells:[Pos] = [pos] + checkDeployable(pos: pos, stone: player)
+        let reverseCells:[Pos] = [pos] + getTurningStones(cells: self.cells, pos: pos, stone: player)
         sequenceCells = reverseCells
     }
     // called from ContentView constantly
@@ -186,7 +119,9 @@ class ReversiGame:ObservableObject{
     }
     // change player check whethr game is over or not
     private func changePlayerOrEndGame(){
-        let reversibleCells = checkAllCells()
+        let reversibleCells = checkAllCellsAndGetDeployablePositions(cells: self.cells) {pos,cell  in
+            self.cells[pos.x][pos.y] = cell
+        }
         switch(black:reversibleCells.black.count>0,white:reversibleCells.white.count>0){
         case (true,true):player = player.opposedPlayer
         case (true,false):player = .black
@@ -196,13 +131,14 @@ class ReversiGame:ObservableObject{
     }
 
     // functions set cells array and return deployable cells for both
-    private func checkAllCells()->(black:[Pos],white:[Pos]){
+    func checkAllCellsAndGetDeployablePositions(cells:[[Cell]],myCells:(Pos,Cell)->())->(black:[Pos],white:[Pos]){
+        
         var reversibleCells:(black:[Pos],white:[Pos]) = (black:[],white:[])
         for x in 0..<8{
             for y in 0..<8{
                 let pos = (x:x,y:y)
-                let cell = checkOneCell(pos:pos)
-                setCell(pos:pos, cell: cell)
+                let cell = checkOneCell(cells: cells, pos: pos)
+                myCells(pos,cell)
                 switch cell{
                 case .empty(deployable: .both):
                     reversibleCells.black.append(pos)
@@ -220,14 +156,14 @@ class ReversiGame:ObservableObject{
     }
     
     //check one cell both stones by using checkDeployable
-    private func checkOneCell(pos: Pos)->Cell{
-        let cell = getCell(pos: pos)
+    private func checkOneCell(cells:[[Cell]],pos: Pos)->Cell{
+        let cell = cells[pos.x][pos.y]
         switch cell{
         case .stone(stone: .black): return Cell.stone(stone: .black)
         case .stone(stone: .white): return Cell.stone(stone: .white)
         case .empty(_):
             let bools:[Bool] = Cell.Stone.allCases.map { stone in
-                return (checkDeployable(pos: pos, stone: stone).count>0)
+                return (getTurningStones(cells: cells, pos: pos, stone: stone).count>0)
             }
             switch (black:bools[0],white:bools[1]){
             case (true,true):return Cell.empty(deployable: .both)
@@ -239,24 +175,24 @@ class ReversiGame:ObservableObject{
     }
     
     //check one cell either black or white. called by checkOneCell
-    private func checkDeployable(pos:Pos,stone:Cell.Stone)->[Pos]{
-        func checkStone(pos: Pos,targetStone:Cell)->Bool{
+    func getTurningStones(cells:[[Cell]],pos:Pos,stone:Cell.Stone)->[Pos]{
+        func checkStone(cells:[[Cell]],pos: Pos,targetStone:Cell)->Bool{
             guard (0..<8).contains(pos.x) && (0..<8).contains(pos.y) else{
                 return false
             }
-            return getCell(pos: pos) == targetStone
+            return cells[pos.x][pos.y] == targetStone
         }
         
         var result:[Pos] = []
-        guard !getCell(pos: pos).isStoneOn else{return result}
+        guard !cells[pos.x][pos.y].isStoneOn else{return result}
         for direction in Direction.allCases{
             var stones:[Pos] = []
             var nextPos = (x:pos.x + direction.axis.x,y:pos.y + direction.axis.y)
-            while(checkStone(pos: nextPos, targetStone: stone.opposed)){
+            while(checkStone(cells: cells, pos: nextPos, targetStone: stone.opposed)){
                 stones.append(nextPos)
                 nextPos = (x:nextPos.x + direction.axis.x,y:nextPos.y + direction.axis.y)
             }
-            guard checkStone(pos: nextPos, targetStone: stone.cell) else{continue}
+            guard checkStone(cells: cells, pos: nextPos, targetStone: stone.cell) else{continue}
             result += stones
         }
         return result
@@ -280,8 +216,10 @@ struct ContentView: View {
                                 .fill(self.reversi.cells[x][y].stoneColor)
                                 .frame(width:length * 0.8, height: length * 0.8)
                             VStack{
-                                Text("(\(x),\(y))")
+                                Text(reversi.getScoreString(score: reversi.scores[x][y]))
                                     .foregroundColor(Color.red)
+                                    .font(.largeTitle)
+                                    .bold()
                             }.font(.subheadline)
                         }.onTapGesture {
                             self.reversi.progressGame(pos: (x:x,y:y))

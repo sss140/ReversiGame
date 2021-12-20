@@ -11,6 +11,8 @@
 		529F1D54276D9A4B00C4D4E5 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 529F1D53276D9A4B00C4D4E5 /* ContentView.swift */; };
 		529F1D56276D9A5E00C4D4E5 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 529F1D55276D9A5E00C4D4E5 /* Assets.xcassets */; };
 		529F1D59276D9A5E00C4D4E5 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 529F1D58276D9A5E00C4D4E5 /* Preview Assets.xcassets */; };
+		529F1D60276F0EEE00C4D4E5 /* Enums.swift in Sources */ = {isa = PBXBuildFile; fileRef = 529F1D5F276F0EEE00C4D4E5 /* Enums.swift */; };
+		529F1D62276F0F6E00C4D4E5 /* HeatMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 529F1D61276F0F6E00C4D4E5 /* HeatMap.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -19,6 +21,8 @@
 		529F1D53276D9A4B00C4D4E5 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		529F1D55276D9A5E00C4D4E5 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		529F1D58276D9A5E00C4D4E5 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		529F1D5F276F0EEE00C4D4E5 /* Enums.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Enums.swift; sourceTree = "<group>"; };
+		529F1D61276F0F6E00C4D4E5 /* HeatMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeatMap.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -53,6 +57,8 @@
 			children = (
 				529F1D51276D9A4B00C4D4E5 /* ReversiGameApp.swift */,
 				529F1D53276D9A4B00C4D4E5 /* ContentView.swift */,
+				529F1D61276F0F6E00C4D4E5 /* HeatMap.swift */,
+				529F1D5F276F0EEE00C4D4E5 /* Enums.swift */,
 				529F1D55276D9A5E00C4D4E5 /* Assets.xcassets */,
 				529F1D57276D9A5E00C4D4E5 /* Preview Content */,
 			);
@@ -137,7 +143,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				529F1D62276F0F6E00C4D4E5 /* HeatMap.swift in Sources */,
 				529F1D54276D9A4B00C4D4E5 /* ContentView.swift in Sources */,
+				529F1D60276F0EEE00C4D4E5 /* Enums.swift in Sources */,
 				529F1D52276D9A4B00C4D4E5 /* ReversiGameApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
