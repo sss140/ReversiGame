@@ -90,3 +90,7 @@ enum Cell:Equatable{
     }
     
 }
+enum Player:String{
+    case black = "Black"
+    case white = "White"
+}

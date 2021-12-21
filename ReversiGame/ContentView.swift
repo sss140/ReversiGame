@@ -8,10 +8,33 @@ import SwiftUI
 
 class ReversiGame:ObservableObject{
     typealias Pos = (x:Int,y:Int)
-   //for calc
+    
+    @Published var controls:(black:Bool,white:Bool) = (false,false){
+        didSet{
+            if player == .black && controls.black{
+                standbyProgress()
+            }
+            if player == .white && controls.white{
+                standbyProgress()
+            }
+        }
+    }
+    
+    private func standbyProgress(){
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            self.progressGame(pos: self.deployPosition)
+        }
+    }
+    
+    
+    //for calc
     @Published var scores:[[Int?]] = []
     var refPoints:[[Int]] = []
     
+    @Published var deployPosition:Pos = (x:0,y:0)
+    func isDeployPosition(x:Int,y:Int)->Bool{
+        return (x == self.deployPosition.x && y == self.deployPosition.y)
+    }
     
     // when game is over then false
     var isIngame:Bool = false
@@ -19,6 +42,15 @@ class ReversiGame:ObservableObject{
     var player:Cell.Stone = .black{
         didSet{
             makeHeatMap()
+            switch player{
+            case .black:
+                if controls.black{
+                    standbyProgress()               }
+            case .white:
+                if controls.white{
+                    standbyProgress()
+                }
+            }
         }
     }
     // for animation purpose
@@ -34,15 +66,16 @@ class ReversiGame:ObservableObject{
     
     //number of stone it is not compulsory for the program
     @Published var stoneCounts:(black:Int,white:Int) = (0,0)
-    private func countStones(){
-        stoneCounts = (0,0)
+    func countStones(cells:[[Cell]])->(black:Int,white:Int){
+        var counts = (black:0,white:0)
         for x in 0..<8{
             for y in 0..<8{
                 let pos:Pos = (x,y)
-                stoneCounts.black += (getCell(pos: pos) == .stone(stone: .black)) ? 1:0
-                stoneCounts.white += (getCell(pos: pos) == .stone(stone: .white)) ? 1:0
+                counts.black += (cells[pos.x][pos.y] == .stone(stone: .black)) ? 1:0
+                counts.white += (cells[pos.x][pos.y] == .stone(stone: .white)) ? 1:0
             }
         }
+        return counts
     }
     // message string.
     @Published var message:String = ""
@@ -77,7 +110,7 @@ class ReversiGame:ObservableObject{
         _ = checkAllCellsAndGetDeployablePositions(cells: self.cells){pos,cell  in
             self.cells[pos.x][pos.y] = cell
         }
-        countStones()
+        self.stoneCounts = countStones(cells: cells)
         makeMesage()
     }
     // turn stones change turn
@@ -113,7 +146,7 @@ class ReversiGame:ObservableObject{
             if sequenceCells.count == 0{
                 changePlayerOrEndGame()
             }
-            countStones()
+            self.stoneCounts = countStones(cells: cells)
             makeMesage()
         }
     }
@@ -126,10 +159,12 @@ class ReversiGame:ObservableObject{
         case (true,true):player = player.opposedPlayer
         case (true,false):player = .black
         case (false,true):player = .white
-        case (false,false):isIngame = false
+        case (false,false):
+            isIngame = false
+            scoresInitialize()
         }
     }
-
+    
     // functions set cells array and return deployable cells for both
     func checkAllCellsAndGetDeployablePositions(cells:[[Cell]],myCells:(Pos,Cell)->())->(black:[Pos],white:[Pos]){
         
@@ -203,13 +238,20 @@ struct ContentView: View {
     @ObservedObject var reversi = ReversiGame()
     let length:CGFloat = 0.9 * UIScreen.main.bounds.width/CGFloat(8)
     var body: some View {
+        HStack{
+            Spacer()
+            Header(player: .black, bool: self.$reversi.controls.black)
+            Spacer()
+            Header(player: .white, bool: self.$reversi.controls.white)
+            Spacer()
+        }
         VStack(spacing: 0.0) {
             ForEach(0..<8){ y in
                 HStack(spacing: 0.0) {
                     ForEach(0..<8){ x in
                         ZStack{
                             Rectangle()
-                                .fill(.green)
+                                .fill(self.reversi.isDeployPosition(x: x, y: y) ? Color.red:Color.green)
                                 .frame(width:length, height: length)
                                 .border(Color.black)
                             Circle()
@@ -217,7 +259,7 @@ struct ContentView: View {
                                 .frame(width:length * 0.8, height: length * 0.8)
                             VStack{
                                 Text(reversi.getScoreString(score: reversi.scores[x][y]))
-                                    .foregroundColor(Color.red)
+                                    .foregroundColor(self.reversi.player == .black ? Color.black:Color.white)
                                     .font(.largeTitle)
                                     .bold()
                             }.font(.subheadline)

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		525BCB442771FE6000C4D263 /* Header.swift in Sources */ = {isa = PBXBuildFile; fileRef = 525BCB432771FE6000C4D263 /* Header.swift */; };
 		529F1D52276D9A4B00C4D4E5 /* ReversiGameApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 529F1D51276D9A4B00C4D4E5 /* ReversiGameApp.swift */; };
 		529F1D54276D9A4B00C4D4E5 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 529F1D53276D9A4B00C4D4E5 /* ContentView.swift */; };
 		529F1D56276D9A5E00C4D4E5 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 529F1D55276D9A5E00C4D4E5 /* Assets.xcassets */; };
@@ -16,6 +17,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		525BCB432771FE6000C4D263 /* Header.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Header.swift; sourceTree = "<group>"; };
 		529F1D4E276D9A4B00C4D4E5 /* ReversiGame.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ReversiGame.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		529F1D51276D9A4B00C4D4E5 /* ReversiGameApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReversiGameApp.swift; sourceTree = "<group>"; };
 		529F1D53276D9A4B00C4D4E5 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -59,6 +61,7 @@
 				529F1D53276D9A4B00C4D4E5 /* ContentView.swift */,
 				529F1D61276F0F6E00C4D4E5 /* HeatMap.swift */,
 				529F1D5F276F0EEE00C4D4E5 /* Enums.swift */,
+				525BCB432771FE6000C4D263 /* Header.swift */,
 				529F1D55276D9A5E00C4D4E5 /* Assets.xcassets */,
 				529F1D57276D9A5E00C4D4E5 /* Preview Content */,
 			);
@@ -143,6 +146,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				525BCB442771FE6000C4D263 /* Header.swift in Sources */,
 				529F1D62276F0F6E00C4D4E5 /* HeatMap.swift in Sources */,
 				529F1D54276D9A4B00C4D4E5 /* ContentView.swift in Sources */,
 				529F1D60276F0EEE00C4D4E5 /* Enums.swift in Sources */,
